@@ -2,7 +2,8 @@ import pandas as pd
 
 # Load data
 def load_data(filepath):
-    return pd.read_csv(filepath)
+    """Loads the raw Superstore CSV file safely using Latin1 encoding."""
+    return pd.read_csv(filepath, encoding='latin1')
 
 def clean_data(df):
 
@@ -44,7 +45,6 @@ def clean_data(df):
 
     # 7. Ensure numerical columns are strictly treated as numbers
     numeric_cols = ["sales", "profits", "quantity", "discount"]
-
 
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
