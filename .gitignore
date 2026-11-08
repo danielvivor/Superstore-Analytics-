@@ -27,3 +27,6 @@ Thumbs.db
 
 # PythonAnywhere & Deployment specifics
 .pythonanywhere/
+
+# OS / Windows Alternate Data Streams
+*:Zone.Identifier
