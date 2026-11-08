@@ -44,7 +44,7 @@ def clean_data(df):
 
 
     # 7. Ensure numerical columns are strictly treated as numbers
-    numeric_cols = ["sales", "profits", "quantity", "discount"]
+    numeric_cols = ["sales", "profit", "quantity", "discount"]
 
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
