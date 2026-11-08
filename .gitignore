@@ -1,0 +1,29 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python (Fixed syntax for standard Python caches)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Streamlit (Crucial for local UI adjustments)
+.streamlit/
+
+# Jupyter
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+*~
+
+# PythonAnywhere & Deployment specifics
+.pythonanywhere/
