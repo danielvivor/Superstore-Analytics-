@@ -123,3 +123,19 @@ def analyze_discount_bands(df):
         average_profit = ("profit", "mean"),
         order_count = ("order_id", "nunique")
     ).reset_index()
+
+def find_profitability_threshold(df):
+    """
+    Find the lowest discount level at which
+    cummulative profit becomes negative.
+    """
+    discount_summary = (
+        df.groupby("discount")["profit"].sum().reset_index()
+    )
+
+    loss_thresholds = discount_summary.loc[discount_summary["profit"] < 0, "discount"]
+
+    if not loss_thresholds.empty:
+        return loss_thresholds.min()
+    
+    return None
