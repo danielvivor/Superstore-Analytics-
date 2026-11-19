@@ -57,3 +57,42 @@ def profit_making_products(df, top_n = 100):
             total_profit = ("profit", "sum")
         ).sort_values(by= "total_profit", ascending=False).head(top_n).reset_index()
     )
+
+# ....................................
+# Discount Analysis
+# ....................................
+def inspect_discount_intervals(df, col="discount", print_output=True):
+    """
+    Inspect unique discount values, summary statistics, and value counts.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame containing the discount column.
+    col : str, default "discount"
+        Name of the discount column.
+    print_output : bool, default True
+        Whether to print the summary to stdout.
+
+    Returns
+    -------
+    dict
+        Dictionary containing 'unique_values', 'summary_stats', and 'value_counts'.
+    """
+    series = df[col].dropna()
+    unique_values = sorted(series.unique())
+    summary_stats = series.describe()
+    value_counts = series.value_counts().sort_index()
+
+    if print_output:
+        print("Unique sorted discounts:", unique_values)
+        print("\nSummary statistics:")
+        print(summary_stats)
+        print("\nValue counts (sorted by discount):")
+        print(value_counts)
+
+    return {
+        "unique_values": unique_values,
+        "summary_stats": summary_stats,
+        "value_counts": value_counts,
+    }
