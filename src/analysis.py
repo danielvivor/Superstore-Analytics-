@@ -1,151 +1,183 @@
 """
-Purpose:
-    Provides reusable analysis functions for 
-    - Profitability, 
-    - Discount,
-    - Operational,
-    - Customer Segment and 
-    - Statistical Analysis
+analysis.py
+
+Reusable business-analysis functions. Provides functionality for:
+
+- Profitability Analysis
+- Discount Analysis
+- Operational Analysis
+- Correlation Analysis
+- Customer Segmentation preparation
 """
 
-import os
 import pandas as pd
 
-from data_processing import load_data, clean_data
-
-# Load dataset
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_PATH = os.path.join(
-    BASE_DIR, "..", "data", "superstore.csv"
-)
-
-raw_df = load_data(DATA_PATH)
-df = clean_data(raw_df)
-
-# ................................
+# .....................................
 # Profitability Analysis
-# ................................
-def loss_making_orders(df):
+# .....................................
 
+def loss_making_orders(df):
     """
     Return all orders with negative profit.
     """
     return df[df["profit"] < 0]
 
 
-def loss_making_products(df, top_n = 100):
+def top_loss_making_products(df, top_n=100):
     """
     Identify products generating the biggest losses.
     """
 
     return (
-        df.groupby(["category", "sub_category", "product_name"]).agg(
-            total_sales = ("sales", "sum"),
-            total_loss = ("profit", "sum")
-        ).sort_values(by="total_loss" ).head(top_n).reset_index()
+        df.groupby(
+            ["category", "sub_category", "product_name"]
+        )
+        .agg(
+            total_sales=("sales", "sum"),
+            total_loss=("profit", "sum")
+        )
+        .sort_values(
+            by="total_loss",
+            ascending=True
+        )
+        .head(top_n)
+        .reset_index()
     )
 
-def profit_making_products(df, top_n = 100):
+
+def top_profit_making_products(df, top_n=100):
     """
     Identify products generating the biggest profits.
     """
 
     return (
-        df.groupby(["category", "sub_category", "product_name"]).agg(
-            total_sales = ("sales", "sum"),
-            total_profit = ("profit", "sum")
-        ).sort_values(by= "total_profit", ascending=False).head(top_n).reset_index()
+        df.groupby(
+            ["category", "sub_category", "product_name"]
+        )
+        .agg(
+            total_sales=("sales", "sum"),
+            total_profit=("profit", "sum")
+        )
+        .sort_values(
+            by="total_profit",
+            ascending=False
+        )
+        .head(top_n)
+        .reset_index()
     )
 
-# ....................................
+
+# ...............................
 # Discount Analysis
-# ....................................
-def inspect_discount_intervals(df, col="discount", print_output=True):
-    """
-    Inspect unique discount values, summary statistics, and value counts.
+# ...............................
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Input DataFrame containing the discount column.
-    col : str, default "discount"
-        Name of the discount column.
-    print_output : bool, default True
-        Whether to print the summary to stdout.
-
-    Returns
-    -------
-    dict
-        Dictionary containing 'unique_values', 'summary_stats', and 'value_counts'.
+def inspect_discount_intervals(
+    df,
+    column="discount",
+    print_output=True
+):
     """
-    series = df[col].dropna()
-    unique_values = sorted(series.unique())
-    summary_stats = series.describe()
-    value_counts = series.value_counts().sort_index()
+    Inspect available discount values and distributions.
+    """
+
+    series = df[column].dropna()
+
+    results = {
+        "unique_values": sorted(series.unique()),
+        "summary_stats": series.describe(),
+        "value_counts": series.value_counts().sort_index()
+    }
 
     if print_output:
-        print("Unique sorted discounts:", unique_values)
-        print("\nSummary statistics:")
-        print(summary_stats)
-        print("\nValue counts (sorted by discount):")
-        print(value_counts)
+        print("Unique Discounts:")
+        print(results["unique_values"])
 
-    return {
-        "unique_values": unique_values,
-        "summary_stats": summary_stats,
-        "value_counts": value_counts,
-    }
+        print("\nSummary Statistics:")
+        print(results["summary_stats"])
+
+        print("\nDiscount Counts:")
+        print(results["value_counts"])
+
+    return results
+
 
 def analyze_discount_bands(df):
     """
-    Create meaningful discount tiers.
+    Create business-friendly discount tiers and
+    summarise profitability by discount level.
     """
-    bins = [-0.001, 0.0, 0.20, 0.32, 0.50, 1.0]
+
+    bins = [
+        -0.001,
+        0.00,
+        0.20,
+        0.32,
+        0.50,
+        1.00
+    ]
+
     labels = [
         "0% (No Discount)",
         "1-20% (Low)",
         "21-32% (Moderate)",
         "33-50% (High)",
-        ">50% (Aggressive)",
+        ">50% (Aggressive)"
     ]
 
     temp = df.copy()
 
-    temp["discount_band"] = pd.cut(temp["discount"], bins=bins, labels=labels)
+    temp["discount_band"] = pd.cut(
+        temp["discount"],
+        bins=bins,
+        labels=labels
+    )
 
-    return(
-        temp.groupby("discount_band", observed=False)
-    ).agg(
-        total_sales = ("sales", "sum"),
-        average_sales = ("sales", "mean"),
-        total_profit = ("profit", "sum"),
-        average_profit = ("profit", "mean"),
-        order_count = ("order_id", "nunique")
-    ).reset_index()
+    return (
+        temp.groupby(
+            "discount_band",
+            observed=False
+        )
+        .agg(
+            total_sales=("sales", "sum"),
+            average_sales=("sales", "mean"),
+            total_profit=("profit", "sum"),
+            average_profit=("profit", "mean"),
+            order_count=("order_id", "nunique")
+        )
+        .reset_index()
+    )
 
 
 def find_profitability_threshold(df):
     """
-    Find the lowest discount level at which
-    cummulative profit becomes negative.
+    Find the lowest discount level where
+    cumulative profit becomes negative.
     """
-    discount_summary = (
-        df.groupby("discount")["profit"].sum().reset_index()
+
+    summary = (
+        df.groupby("discount")["profit"]
+        .sum()
+        .reset_index()
     )
 
-    loss_thresholds = discount_summary.loc[discount_summary["profit"] < 0, "discount"]
+    loss_thresholds = summary.loc[
+        summary["profit"] < 0,
+        "discount"
+    ]
 
     if not loss_thresholds.empty:
         return loss_thresholds.min()
-    
+
     return None
 
 
-def high_discount_losses(df, discount_threshold=0.30):
+def high_discount_losses(
+    df,
+    discount_threshold=0.30
+):
     """
-    Products receiving large discounts
-    while making losses.
+    Identify products receiving high discounts
+    while generating losses.
     """
 
     losses = df[
@@ -155,24 +187,34 @@ def high_discount_losses(df, discount_threshold=0.30):
     ]
 
     return (
-        losses.groupby(["category","sub_category","product_name"]
-        ).agg(
+        losses.groupby(
+            [
+                "category",
+                "sub_category",
+                "product_name"
+            ]
+        )
+        .agg(
             total_loss=("profit", "sum"),
             total_sales=("sales", "sum"),
             avg_discount=("discount", "mean")
-        ).sort_values(
-            by="total_loss",
-            ascending=True
-        ).reset_index()
+        )
+        .sort_values(
+            by="total_loss"
+        )
+        .reset_index()
     )
 
-# ..............................
-# Operational Analysis
-# ..............................
+
+# ..........................
+# Opertional Analysis
+# ..........................
+
 def shipping_performance(df):
     """
-    Shipping duration metrics.
+    Shipping duration summary statistics.
     """
+
     return {
         "average_days_to_ship":
             round(df["days_to_ship"].mean(), 2),
@@ -184,30 +226,92 @@ def shipping_performance(df):
             df["days_to_ship"].min()
     }
 
-# .................................
+
+# ..............................
+# Descriptive Statistics
+# ..............................
+
+def descriptive_statistics(df):
+    """
+    Numerical summary statistics.
+    """
+
+    numeric_cols = [
+        "sales",
+        "profit",
+        "quantity",
+        "discount",
+        "days_to_ship"
+    ]
+
+    return df[numeric_cols].describe()
+
+
+# .......................
 # Correlation Analysis
-# .................................
-def correlation_matrix(df):
+# .......................
+
+def correlation_matrix(
+    df,
+    method="pearson"
+):
     """
-    Correlation matrix for numerical values.
+    Generate a correlation matrix.
+
+    Parameters
+    ----------
+    method : str
+        'pearson' or 'spearman'
     """
-    numeric_cols = ["sales", "profit", "quantity", "discount", "days_to_ship"]
+
+    numeric_cols = [
+        "sales",
+        "profit",
+        "quantity",
+        "discount",
+        "days_to_ship"
+    ]
 
     return (
-        df[numeric_cols].corr(method="pearson").round(3)
+        df[numeric_cols]
+        .corr(method=method)
+        .round(3)
     )
 
 
-# ...................................
-# Customer Segmentation Preparation
-# ...................................
+# ................................
+# Statistical testing preparation
+# ................................
+
+def regional_profit_groups(df):
+    """
+    Return profit grouped by region.
+
+    Useful for:
+    - ANOVA
+    - Kruskal-Wallis
+    """
+
+    return {
+        region: group["profit"]
+        for region, group
+        in df.groupby("region")
+    }
+
+
+# .....................................
+# Customer Segment preparation
+# .....................................
 
 def customer_metrics(df):
     """
     Aggregate customer-level metrics.
-    Useful for K-Means clustering.
+
+    Useful for:
+    - K-Means Clustering
+    - Customer Segmentation
     """
-    
+
     return (
         df.groupby("customer_id")
         .agg(
@@ -215,5 +319,6 @@ def customer_metrics(df):
             total_profit=("profit", "sum"),
             order_count=("order_id", "nunique"),
             total_quantity=("quantity", "sum")
-        ).reset_index()
+        )
+        .reset_index()
     )
