@@ -165,3 +165,21 @@ def high_discount_losses(df, discount_threshold=0.30):
             ascending=True
         ).reset_index()
     )
+
+# ..............................
+# Operational Analysis
+# ..............................
+def shipping_performance(df):
+    """
+    Shipping duration metrics.
+    """
+    return {
+        "average_days_to_ship":
+            round(df["days_to_ship"].mean(), 2),
+
+        "maximum_days_to_ship":
+            df["days_to_ship"].max(),
+
+        "minimum_days_to_ship":
+            df["days_to_ship"].min()
+    }
