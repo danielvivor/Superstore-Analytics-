@@ -96,3 +96,30 @@ def inspect_discount_intervals(df, col="discount", print_output=True):
         "summary_stats": summary_stats,
         "value_counts": value_counts,
     }
+
+def analyze_discount_bands(df):
+    """
+    Create meaningful discount tiers.
+    """
+    bins = [-0.001, 0.0, 0.20, 0.32, 0.50, 1.0]
+    labels = [
+        "0% (No Discount)",
+        "1-20% (Low)",
+        "21-32% (Moderate)",
+        "33-50% (High)",
+        ">50% (Aggressive)",
+    ]
+
+    temp = df.copy()
+
+    temp["discount_band"] = pd.cut(temp["discount"], bins=bins, labels=labels)
+
+    return(
+        temp.groupby("discount_band", observed=False)
+    ).agg(
+        total_sales = ("sales", "sum"),
+        average_sales = ("sales", "mean"),
+        total_profit = ("profit", "sum"),
+        average_profit = ("profit", "mean"),
+        order_count = ("order_id", "nunique")
+    ).reset_index()
