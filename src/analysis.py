@@ -196,3 +196,24 @@ def correlation_matrix(df):
     return (
         df[numeric_cols].corr(method="pearson").round(3)
     )
+
+
+# ...................................
+# Customer Segmentation Preparation
+# ...................................
+
+def customer_metrics(df):
+    """
+    Aggregate customer-level metrics.
+    Useful for K-Means clustering.
+    """
+    
+    return (
+        df.groupby("customer_id")
+        .agg(
+            total_sales=("sales", "sum"),
+            total_profit=("profit", "sum"),
+            order_count=("order_id", "nunique"),
+            total_quantity=("quantity", "sum")
+        ).reset_index()
+    )
