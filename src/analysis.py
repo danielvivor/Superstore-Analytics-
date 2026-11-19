@@ -124,6 +124,7 @@ def analyze_discount_bands(df):
         order_count = ("order_id", "nunique")
     ).reset_index()
 
+
 def find_profitability_threshold(df):
     """
     Find the lowest discount level at which
@@ -139,3 +140,28 @@ def find_profitability_threshold(df):
         return loss_thresholds.min()
     
     return None
+
+
+def high_discount_losses(df, discount_threshold=0.30):
+    """
+    Products receiving large discounts
+    while making losses.
+    """
+
+    losses = df[
+        (df["discount"] >= discount_threshold)
+        &
+        (df["profit"] < 0)
+    ]
+
+    return (
+        losses.groupby(["category","sub_category","product_name"]
+        ).agg(
+            total_loss=("profit", "sum"),
+            total_sales=("sales", "sum"),
+            avg_discount=("discount", "mean")
+        ).sort_values(
+            by="total_loss",
+            ascending=True
+        ).reset_index()
+    )
