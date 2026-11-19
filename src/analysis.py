@@ -31,4 +31,20 @@ def loss_making_orders(df):
     """
     Return all orders with negative profit.
     """
-    return df[df["profits"] < 0]
+    return df[df["profit"] < 0]
+
+
+def loss_making_products(df, top_n = 100):
+    """
+    Identify products generating the biggest losses.
+    """
+
+    return (
+        df.groupby(["category", "sub_category", "product_name"]).agg(
+            total_sales = ("sales", "sum"),
+            total_loss = ("profit", "sum")
+        ).sort_values(by="total_loss" ).head(top_n).reset_index()
+    )
+
+result = loss_making_products(df)
+print(result)
