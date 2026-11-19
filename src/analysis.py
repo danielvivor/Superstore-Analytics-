@@ -183,3 +183,16 @@ def shipping_performance(df):
         "minimum_days_to_ship":
             df["days_to_ship"].min()
     }
+
+# .................................
+# Correlation Analysis
+# .................................
+def correlation_matrix(df):
+    """
+    Correlation matrix for numerical values.
+    """
+    numeric_cols = ["sales", "profit", "quantity", "discount", "days_to_ship"]
+
+    return (
+        df[numeric_cols].corr(method="pearson").round(3)
+    )
