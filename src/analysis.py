@@ -46,5 +46,14 @@ def loss_making_products(df, top_n = 100):
         ).sort_values(by="total_loss" ).head(top_n).reset_index()
     )
 
-result = loss_making_products(df)
-print(result)
+def profit_making_products(df, top_n = 100):
+    """
+    Identify products generating the biggest profits.
+    """
+
+    return (
+        df.groupby(["category", "sub_category", "product_name"]).agg(
+            total_sales = ("sales", "sum"),
+            total_profit = ("profit", "sum")
+        ).sort_values(by= "total_profit", ascending=False).head(top_n).reset_index()
+    )
